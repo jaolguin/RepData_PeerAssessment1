@@ -1,14 +1,10 @@
----
-output:
-  html_document:
-    keep_md: yes
----
 Reproducible Research: Peer Assessment 1
 ========================================
 
 ## Loading and preprocessing the data
 
-```{r}
+
+```r
 library(ggplot2)
 
 unzip("activity.zip")
@@ -18,13 +14,24 @@ data <- read.csv("activity.csv")
 summary(data)
 ```
 
+```
+##      steps                date          interval     
+##  Min.   :  0.00   2012-10-01:  288   Min.   :   0.0  
+##  1st Qu.:  0.00   2012-10-02:  288   1st Qu.: 588.8  
+##  Median :  0.00   2012-10-03:  288   Median :1177.5  
+##  Mean   : 37.38   2012-10-04:  288   Mean   :1177.5  
+##  3rd Qu.: 12.00   2012-10-05:  288   3rd Qu.:1766.2  
+##  Max.   :806.00   2012-10-06:  288   Max.   :2355.0  
+##  NA's   :2304     (Other)   :15840
+```
+
 
 ## What is the mean total number of steps taken per day?
 
 1. Make a histogram of the total number of steps taken each day
 
-```{r}
 
+```r
 total.steps <- tapply(data$steps, 
                       data$date, 
                       FUN = sum, 
@@ -33,21 +40,30 @@ total.steps <- tapply(data$steps,
 qplot(total.steps, 
       binwidth = 1200, 
       xlab="Total steps / day")
-
 ```
+
+![](./PA1_template_files/figure-html/unnamed-chunk-2-1.png) 
 
 2. Calculate and report the **mean** and **median** total number of
    steps taken per day
 
-```{r}
 
+```r
 mean(total.steps)
 ```
 
+```
+## [1] 9354.23
+```
 
-```{r}
 
+
+```r
 median(total.steps)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -57,8 +73,8 @@ median(total.steps)
    interval (x-axis) and the average number of steps taken, averaged
    across all days (y-axis)
 
-```{r}
 
+```r
 averages <- aggregate(x=list(steps=data$steps), 
                       by = list(interval=data$interval),
                       FUN = mean, 
@@ -70,13 +86,20 @@ ggplot(data=averages, aes(x=interval, y=steps)) +
     ylab("Average steps")
 ```
 
+![](./PA1_template_files/figure-html/unnamed-chunk-5-1.png) 
+
 
 2. Which 5-minute interval, on average across all the days in the
    dataset, contains the maximum number of steps?
 
-```{r}
 
+```r
 averages[which.max(averages$steps),]
+```
+
+```
+##     interval    steps
+## 104      835 206.1698
 ```
 
 ## Imputing missing values
@@ -84,11 +107,17 @@ averages[which.max(averages$steps),]
 1. Calculate and report the total number of missing values in the
    dataset (i.e. the total number of rows with `NA`s)
 
-```{r}
 
+```r
 missing <- is.na(data$steps)
 # How many missing
 table(missing)
+```
+
+```
+## missing
+## FALSE  TRUE 
+## 15264  2304
 ```
 
 2. Devise a strategy for filling in all of the missing values in the
@@ -99,8 +128,8 @@ table(missing)
 I will use the means for the 5-minute intervals as fillers for missing
 values.
 
-```{r}
 
+```r
 # Replace each missing value with the mean value of its 5-minute interval
 fill.value <- function(steps, interval) {
     filled <- NA
@@ -110,14 +139,13 @@ fill.value <- function(steps, interval) {
         filled <- (averages[averages$interval==interval, "steps"])
     return(filled)
 }
-
 ```
 
 3. Create a new dataset that is equal to the original dataset but with
    the missing data filled in.
 
-```{r}
 
+```r
 filled.data <- data
 
 filled.data$steps <- mapply(fill.value, 
@@ -127,7 +155,6 @@ filled.data$steps <- mapply(fill.value,
 total.steps <- tapply(filled.data$steps, 
                       filled.data$date, 
                       FUN = sum)
-
 ```
 
 4. Make a histogram of the total number of steps taken each day and
@@ -136,15 +163,29 @@ total.steps <- tapply(filled.data$steps,
    the first part of the assignment? What is the impact of imputing
    missing data on the estimates of the total daily number of steps?
 
-```{r}
 
+```r
 qplot(total.steps, 
       binwidth = 1200, 
       xlab = "Total steps / day")
+```
 
+![](./PA1_template_files/figure-html/unnamed-chunk-10-1.png) 
+
+```r
 mean(total.steps)
+```
 
+```
+## [1] 10766.19
+```
+
+```r
 median(total.steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 
@@ -157,8 +198,8 @@ estimating the total number of steps per day.
    "weekday" and "weekend" indicating whether a given date is a
    weekday or weekend day.
 
-```{r}
 
+```r
 weekdayweekend <- function(date) {
     day <- weekdays(date)
     if (day %in% c("Monday", 
@@ -184,8 +225,8 @@ filled.data$day <- sapply(filled.data$date,
    taken, averaged across all weekday days or weekend days
    (y-axis).
    
-```{r}
 
+```r
 averages <- aggregate(steps ~ interval + day, 
                       data=filled.data, 
                       mean)
@@ -195,3 +236,5 @@ ggplot(averages, aes(interval, steps)) +
         xlab("5-minute interval") +
         ylab("Steps")
 ```
+
+![](./PA1_template_files/figure-html/unnamed-chunk-12-1.png) 
